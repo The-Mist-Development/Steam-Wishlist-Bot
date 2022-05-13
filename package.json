@@ -1,0 +1,24 @@
+{
+  "name": "steam-wishlist-bot",
+  "version": "0.1.0",
+  "description": " A Discord bot which notifies you when Steam wishlist items go on sale ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/The-Mist-Development/Steam-Wishlist-Bot.git"
+  },
+  "author": "R2D2Vader",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/The-Mist-Development/Steam-Wishlist-Bot/issues"
+  },
+  "homepage": "https://github.com/The-Mist-Development/Steam-Wishlist-Bot#readme",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "discord.js": "^13.7.0",
+    "dotenv": "^16.0.1"
+  }
+}
