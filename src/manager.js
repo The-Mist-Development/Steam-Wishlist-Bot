@@ -12,5 +12,23 @@ module.exports = {
                 reject(error);
             });
         });
+    },
+    addUser: function (discordId, steamUrl) {
+        return new Promise(function (resolve, reject) {
+            //TODO Check if user already exists
+            if (!steamUrl.includes("steamcommunity.com")) reject("INVALID_URL");
+            let steamSnippet = steamUrl.split("steamcommunity.com")[1];
+            if (steamSnippet.startsWith("/id/") || steamSnippet.startsWith("/profiles/")) {
+                let array = steamSnippet.split("");
+                if (array[array.length - 1] != "/") steamSnippet = steamSnippet + "/";
+                steam.getUserWishlist(steamSnippet).then(function (response) {
+                    //TODO Add user to database
+                    resolve(response);
+                }).catch(function (error) {
+                    reject(error);
+                })
+            }
+            else reject("INVALID_URL");
+        })
     }
 }
