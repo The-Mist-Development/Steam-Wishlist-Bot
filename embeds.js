@@ -25,7 +25,7 @@ module.exports = {
                 },
                 {
                     name: `\`${prefix}delete\``,
-                    value: "Deletes your wishlist from our database."
+                    value: "Deletes your wishlist from our database and unregisters you from notifications."
                 },
                 {
                     name: `\`${prefix}privacy\``,

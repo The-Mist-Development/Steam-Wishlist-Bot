@@ -7,7 +7,7 @@ const wishlist = require("./src/manager");
 const { Client, Intents, MessageEmbed } = require("discord.js");
 const { helpembed, privacyembed } = require("./embeds");
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES] });
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES], partials: ["CHANNEL"] });
 client.login(process.env.TOKEN);
 
 client.on("ready", () => {
@@ -31,6 +31,9 @@ client.on("messageCreate", async (message) => {
         case "game":
             if (args[0]) sendGameInfo(message, args[0]);
             else message.channel.send("Please provide a Steam Game ID.");
+            break;
+        case "register":
+            startRegister(message);
             break;
         default:
             message.channel.send(`\`${command}\` is not a command. Type \`$help\` to view the list of commands.`);
@@ -82,4 +85,68 @@ function sendGameInfo(message, id) {
             message.channel.send("An error occured! Try again later.");
         }
     });
+}
+
+async function startRegister(message) {
+    message.react("📩")
+    let embed = new MessageEmbed()
+        .setTitle("Send your Steam Profile URL")
+        .setColor("#ebc610")
+        .addFields(
+            {
+                name: "Step 1: Open your Steam Profile.",
+                value: 'Open the Steam app, hover over your profile name in the top bar, and click "Profile".'
+            },
+            {
+                name: "Step 2: Right-click somewhere on the page to open the context menu.",
+                value: "Or if you have opened your profile in a browser, you can simply copy the URL from the address bar."
+            },
+            {
+                name: 'Step 3: Click "Copy Page URL".',
+                value: "Then, paste the link here."
+            }
+        )
+    let dm = await message.author.send({ content: "Follow the instructions below to register your Wishlist and enable notifications.", embeds: [embed] });
+    let filter = m => m.author.id == message.author.id
+    dm.channel.awaitMessages({
+        filter,
+        max: 1,
+        time: 120000,
+        errors: ['time']
+    }).then(collected => {
+        let url = collected.first().content;
+        wishlist.addUser(message.author.id, url).then(function (wishlist) {
+            let embed2 = new MessageEmbed()
+                .setTitle("Success")
+                .setDescription("Your Wishlist has successfully been added to our database to alert you when one of your games goes on sale. We will automatically keep your wishlist updated, but you can manually update our copy of it by running `$resync`. To disable notifications, run `$delete`.")
+                .setColor("#382bc4")
+            embed2.addField("Games currently on your wishlist", "---");
+            let keys = Object.keys(wishlist);
+            let length = keys.length <= 8 ? keys.length : 8;
+            for (let i = 0; i < length; i++) {
+                let cprice = wishlist[keys[i]].subs[0] ? wishlist[keys[i]].subs[0].discount_block.split("<div class=\"discount_final_price\">")[1].split("</div>")[0] : "Not available";
+                embed2.addField(`\`${keys[i]}\` ${wishlist[keys[i]].name}`, `Estimated price: **${cprice}**`);
+            }
+            if (keys.length - length > 0) {
+                embed2.addField(`Plus ${keys.length - length} more game${keys.length - length > 1 ? "s" : ""}.`, "---");
+            }
+            dm.channel.send({ embeds: [embed2] });
+        }).catch(error => {
+            if (error == "INVALID_URL") {
+                dm.channel.send("Invalid Steam Profile URL! Registration cancelled.");
+            }
+            else if (error == "WISHLIST_NOT_FOUND") {
+                dm.channel.send("Couldn't find your wishlist! Make sure that your profile URL is correct and that your Game Details are set to public.");
+            }
+            else {
+                console.log(error);
+                dm.channel.send("An error occured! Please try again.");
+            }
+        })
+    }).catch(collected => {
+        if (collected.size == 0) {
+            dm.channel.send("Timed out. Please try again.");
+        }
+        else dm.channel.send("An error occured. Please try again.")
+    })
 }
