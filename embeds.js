@@ -37,7 +37,7 @@ module.exports = {
                 }
             )
     },
-    privacyembed: function() {
+    privacyembed: function () {
         return new MessageEmbed()
             .setTitle("Privacy")
             .setColor("#10b555")
@@ -54,7 +54,7 @@ module.exports = {
                 {
                     name: "How we can tell when information changes",
                     value: "We don't know immediately when you have changed your wishlist or a game goes on sale. This is because we update our data at a set interval - every 24 hours for wishlists (unless you trigger a manual resync) and every hour for game prices."
-                } 
+                }
             )
     }
 }

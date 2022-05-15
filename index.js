@@ -53,7 +53,7 @@ function sendGameInfo(message, id) {
 
             )
         }
-        else if (response.is_free){
+        else if (response.is_free) {
             embed.addFields(
                 {
                     name: "Price: Free",
