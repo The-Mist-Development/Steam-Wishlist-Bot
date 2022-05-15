@@ -13,5 +13,22 @@ module.exports = {
                     reject(error.toString());
                 });
         });
+    },
+    getUserWishlist: function (snippet) {
+        return new Promise(function (resolve, reject) {
+            axios.get(`https://store.steampowered.com/wishlist${snippet}wishlistdata/`)
+                .then(function (response) {
+                    if (response.success) {
+                        if (response.success == 2) {
+                            return reject("WISHLIST_NOT_FOUND");
+                        }
+                        else return reject("IDK");
+                    }
+                    resolve(response.data);
+                })
+                .catch(function (error) {
+                    reject(error.toString());
+                });
+        });
     }
 }
