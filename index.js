@@ -1,3 +1,4 @@
+console.log("Process Started");
 // This is an example bot which utilises our Steam Wishlist code.
 // Wishlist Code Setup
 require("dotenv").config();
