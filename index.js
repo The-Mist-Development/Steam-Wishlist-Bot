@@ -36,6 +36,9 @@ client.on("messageCreate", async (message) => {
         case "register":
             startRegister(message);
             break;
+        case "delete":
+            unregister(message);
+            break;
         default:
             message.channel.send(`\`${command}\` is not a command. Type \`$help\` to view the list of commands.`);
     }
@@ -139,6 +142,9 @@ async function startRegister(message) {
             else if (error == "WISHLIST_NOT_FOUND") {
                 dm.channel.send("Couldn't find your wishlist! Make sure that your profile URL is correct and that your Game Details are set to public.");
             }
+            else if (error == "USER_ALREADY_EXISTS") {
+                dm.channel.send("Wait a minute - you are already registered! To update your wishlist, run `$resync`.");
+            }
             else {
                 console.log(error);
                 dm.channel.send("An error occured! Please try again.");
@@ -149,5 +155,19 @@ async function startRegister(message) {
             dm.channel.send("Timed out. Please try again.");
         }
         else dm.channel.send("An error occured. Please try again.")
+    })
+}
+
+function unregister(message) {
+    wishlist.deleteUser(message.author.id).then(function () {
+        message.channel.send("Your wishlist has been successfully removed from our database. We will no longer notify you when your games go on sale!");
+    }).catch(error => {
+        if (error == "USER_NOT_FOUND") {
+            message.channel.send("You don't have your wishlist registered!");
+        }
+        else {
+            console.log(error);
+            message.channel.send("An error occured. Please try again.");
+        }
     })
 }
