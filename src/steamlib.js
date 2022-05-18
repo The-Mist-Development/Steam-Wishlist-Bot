@@ -27,7 +27,8 @@ module.exports = {
                     resolve(response.data);
                 })
                 .catch(function (error) {
-                    reject(error.toString());
+                    if (error.toString().includes("status code 500")) reject("WISHLIST_NOT_FOUND");
+                    else reject(error.toString());
                 });
         });
     }
