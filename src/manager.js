@@ -1,4 +1,5 @@
 const steam = require("./steamlib");
+const db = require("./dbwrapper");
 
 module.exports = {
     getSteamGame: function (gameid) {
@@ -22,8 +23,12 @@ module.exports = {
                 let array = steamSnippet.split("");
                 if (array[array.length - 1] != "/") steamSnippet = steamSnippet + "/";
                 steam.getUserWishlist(steamSnippet).then(function (response) {
-                    //TODO Add user to database
-                    resolve(response);
+                    db.addUser(discordId, steamSnippet).then(function (response2) {
+                        resolve(response);
+                        console.log("db response: " + response2);
+                    }).catch(function (error2) {
+                        reject(error2);
+                    })
                 }).catch(function (error) {
                     reject(error);
                 })
