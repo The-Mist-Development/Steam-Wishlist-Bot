@@ -10,7 +10,7 @@ else if (process.env.WISHLIST_MODE == "MYSQL") {
     db = new MySQLWrapper(process.env.WISHLIST_DBURL);
 }
 else {
-    throw("Environment variable WISHLIST_MODE not set");
+    throw ("Environment variable WISHLIST_MODE not set");
 }
 
 module.exports = {

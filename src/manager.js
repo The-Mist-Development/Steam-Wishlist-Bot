@@ -25,6 +25,7 @@ module.exports = {
                     if (array[array.length - 1] != "/") steamSnippet = steamSnippet + "/";
                     steam.getUserWishlist(steamSnippet).then(function (response) {
                         db.addUser(discordId, steamSnippet).then(function (response2) {
+                            resyncSingle(discordId, response);
                             resolve(response);
                         }).catch(function (error2) {
                             reject(error2);
@@ -55,3 +56,24 @@ module.exports = {
         })
     }
 }
+
+function resyncSingle (discordId, steamWishlist = null) {
+    if (steamWishlist == null) {
+        return new Promise (function (resolve, reject) {
+            db.getUser(discordId).then(function (response) {
+                if (JSON.stringify(response) == "[]") reject("USER_NOT_FOUND");
+                steam.getUserWishlist(response[0].steamSnippet).then(function (response) {
+                    // do the same thing as in the else block below
+                }).catch(function (error) {
+                    reject(error);
+                })
+            })
+        });
+    }
+    else {
+        let keys = Object.keys(steamWishlist);
+        // do something
+    }
+}
+
+module.exports.resyncSingle = resyncSingle;
