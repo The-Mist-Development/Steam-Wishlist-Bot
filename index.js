@@ -39,6 +39,17 @@ client.on("messageCreate", async (message) => {
         case "delete":
             unregister(message);
             break;
+        case "resync":
+            wishlist.resyncSingle(message.author.id).then(function () {
+                message.channel.send("✅ Successfully synced our copy of your wishlist with Steam.");
+            }).catch(function (err) {
+                message.channel.send("❌ Failed to sync your wishlist with Steam. Please try again later.");
+                console.log("Error syncing wishlist: " + err);
+            });
+            break;
+        case "list": 
+            sendList(message); 
+            break;
         default:
             message.channel.send(`\`${command}\` is not a command. Type \`$help\` to view the list of commands.`);
     }
@@ -164,6 +175,38 @@ function unregister(message) {
     }).catch(error => {
         if (error == "USER_NOT_FOUND") {
             message.channel.send("You don't have your wishlist registered!");
+        }
+        else {
+            console.log(error);
+            message.channel.send("An error occured. Please try again.");
+        }
+    })
+}
+
+function sendList(message) {
+    wishlist.getWishlistFromDB(message.author.id).then(function (response) {
+        let embed = new MessageEmbed()
+            .setTitle("Your Wishlist")
+            .setDescription("This is the list of games we will notify you about. To update our copy of your wishlist, run `$resync` - though this automatically happens once every 24 hours.")
+            .setColor("#de66d0")
+        for (let i = 0; i < response.length; i++) {
+            if (response[i].price_overview) {
+                embed.addField(`\`${response[i].steam_appid}\` ${response[i].name}`, `Price: **${response[i].price_overview.final_formatted}** (${response[i].price_overview.discount_percent > 0 ? `**${response[i].price_overview.discount_percent}%** Discount` : `Full Price`})`, false);
+            }
+            else if (response[i].is_free) {
+                embed.addField(`\`${response[i].steam_appid}\` ${response[i].name}`, "Price: **Free**", false);
+            }
+            else {
+                embed.addField(`\`${response[i].steam_appid}\` ${response[i].name}`, "Price: **Unknown** / not available", false);
+            }
+        }
+        message.channel.send({ embeds: [embed] });
+    }).catch(function (error) {
+        if (error == "USER_NOT_FOUND") {
+            message.channel.send("You don't have your wishlist registered!");
+        }
+        else if (error == "GAME_NOT_FOUND") {
+            message.channel.send("Couldn't find one or more of the games on your wishlist! Run `$resync` to update our copy.");
         }
         else {
             console.log(error);

@@ -40,5 +40,15 @@ module.exports = {
                 reject(error);
             });
         });
+    },
+    writeWishlist(discordId, gameList) {
+        return new Promise((resolve, reject) => {
+            let wishlistString = gameList.join("&");
+            db.writeWishlist(discordId, wishlistString).then(function (response) {
+                resolve(response);
+            }).catch(function (error) {
+                reject(error);
+            })
+        })
     }
 }

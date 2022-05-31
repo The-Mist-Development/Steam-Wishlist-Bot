@@ -39,7 +39,14 @@ class MySQLWrapper {
             });
         });
     }
-
+    writeWishlist(discordId, wishlistString) {
+        return new Promise((resolve, reject) => {
+            this.connection.query("UPDATE wishlist SET gameList = ? WHERE discordId = ?", [wishlistString, discordId], function (error, results, fields) {
+                if (error) reject(error);
+                resolve(results);
+            });
+        })
+    }
 }
 
 module.exports = MySQLWrapper;

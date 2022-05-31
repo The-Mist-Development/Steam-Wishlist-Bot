@@ -54,6 +54,27 @@ module.exports = {
                 reject(error);
             });
         })
+    },
+    getWishlistFromDB(discordId) {
+        return new Promise(function (resolve, reject) {
+            db.getUser(discordId).then(function (response) {
+                if (JSON.stringify(response) == "[]") reject("USER_NOT_FOUND");
+                let games = response[0].gameList.split("&");
+                let finalArr = [];
+                for (let i = 0; i < games.length; i++) {
+                    steam.getGameInfo(games[i]).then(function (response) {
+                        finalArr.push(response);
+                        if (finalArr.length == games.length) {
+                            resolve(finalArr);
+                        }
+                    }).catch(function (error) {
+                        reject(error);
+                    })
+                }
+            }).catch(function (error) {
+                reject(error);
+            });
+        })
     }
 }
 
@@ -63,7 +84,12 @@ function resyncSingle (discordId, steamWishlist = null) {
             db.getUser(discordId).then(function (response) {
                 if (JSON.stringify(response) == "[]") reject("USER_NOT_FOUND");
                 steam.getUserWishlist(response[0].steamSnippet).then(function (response) {
-                    // do the same thing as in the else block below
+                    let keys = Object.keys(response);
+                    db.writeWishlist(discordId, keys).then(function (response) {
+                        resolve(response);
+                    }).catch(function (error) {
+                        reject(error);
+                    })
                 }).catch(function (error) {
                     reject(error);
                 })
@@ -72,7 +98,11 @@ function resyncSingle (discordId, steamWishlist = null) {
     }
     else {
         let keys = Object.keys(steamWishlist);
-        // do something
+        db.writeWishlist(discordId, keys).then(function (response) {
+            return;
+        }).catch(function (error) {
+            console.log("[WISHLIST] Error setting wishlist with provided data: " + error);
+        })
     }
 }
 
