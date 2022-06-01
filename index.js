@@ -188,7 +188,7 @@ function sendList(message) {
         let embed = new MessageEmbed()
             .setTitle("Your Wishlist")
             .setDescription("This is the list of games we will notify you about. To update our copy of your wishlist, run `$resync` - though this automatically happens once every 24 hours.")
-            .setColor("#de66d0")
+            .setColor("#0d8222")
         for (let i = 0; i < response.length; i++) {
             if (response[i].price_overview) {
                 embed.addField(`\`${response[i].steam_appid}\` ${response[i].name}`, `Price: **${response[i].price_overview.final_formatted}** (${response[i].price_overview.discount_percent > 0 ? `**${response[i].price_overview.discount_percent}%** Discount` : `Full Price`})`, false);

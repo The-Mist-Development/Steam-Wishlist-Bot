@@ -11,13 +11,16 @@ class MySQLWrapper {
                 rejectUnauthorized: false
               }
           });
-        this.connection.query("CREATE TABLE IF NOT EXISTS wishlist (discordId VARCHAR(255) PRIMARY KEY, steamSnippet VARCHAR(255), gameList LONGTEXT);", function (error, results, fields) {
-            if (error) console.log("[WISHLIST] Error creating wishlist table in MySQL: " + error);
+        this.connection.query("CREATE TABLE IF NOT EXISTS wishlist_users (discordId VARCHAR(255) PRIMARY KEY, steamSnippet VARCHAR(255), gameList LONGTEXT);", function (error, results, fields) {
+            if (error) console.log("[WISHLIST] Error creating wishlist_users table in MySQL: " + error);
+        });
+        this.connection.query("CREATE TABLE IF NOT EXISTS wishlist_games (gameId VARCHAR(255) PRIMARY KEY, lastPrice VARCHAR(255));", function (error, results, fields) {
+            if (error) console.log("[WISHLIST] Error creating wishlist_games table in MySQL: " + error);
         });
     }
     addUser(discordId, steamSnippet) {
         return new Promise((resolve, reject) => {
-            this.connection.query("INSERT INTO wishlist (discordId, steamSnippet) VALUES (?, ?)", [discordId, steamSnippet], function (error, results, fields) {
+            this.connection.query("INSERT INTO wishlist_users (discordId, steamSnippet) VALUES (?, ?)", [discordId, steamSnippet], function (error, results, fields) {
                 if (error) reject(error);
                 resolve(results);
             });
@@ -25,7 +28,7 @@ class MySQLWrapper {
     }
     getUser(discordId) {
         return new Promise((resolve, reject) => {
-            this.connection.query("SELECT * FROM wishlist WHERE discordId = ?", [discordId], function (error, results, fields) {
+            this.connection.query("SELECT * FROM wishlist_users WHERE discordId = ?", [discordId], function (error, results, fields) {
                 if (error) reject(error);
                 resolve(results);
             });
@@ -33,7 +36,7 @@ class MySQLWrapper {
     }
     deleteUser(discordId) {
         return new Promise((resolve, reject) => {
-            this.connection.query("DELETE FROM wishlist WHERE discordId = ?", [discordId], function (error, results, fields) {
+            this.connection.query("DELETE FROM wishlist_users WHERE discordId = ?", [discordId], function (error, results, fields) {
                 if (error) reject(error);
                 resolve(results);
             });
@@ -41,7 +44,7 @@ class MySQLWrapper {
     }
     writeWishlist(discordId, wishlistString) {
         return new Promise((resolve, reject) => {
-            this.connection.query("UPDATE wishlist SET gameList = ? WHERE discordId = ?", [wishlistString, discordId], function (error, results, fields) {
+            this.connection.query("UPDATE wishlist_users SET gameList = ? WHERE discordId = ?", [wishlistString, discordId], function (error, results, fields) {
                 if (error) reject(error);
                 resolve(results);
             });
