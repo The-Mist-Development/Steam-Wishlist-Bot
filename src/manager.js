@@ -1,6 +1,8 @@
 const steam = require("./steamlib");
 const db = require("./dbwrapper");
+const CronJob = require('cron').CronJob;
 
+// Exports
 module.exports = {
     getSteamGame: function (gameid) {
         return new Promise(function (resolve, reject) {
@@ -107,3 +109,22 @@ function resyncSingle (discordId, steamWishlist = null) {
 }
 
 module.exports.resyncSingle = resyncSingle;
+
+// Cron Jobs
+let wishlistSync = new CronJob(
+	'0 0 12 * * *',
+	function() {
+        console.log("[WISHLIST] Starting daily wishlist sync.");
+		db.getAllUsers().then(function (response) {
+            for (let i = 0; i < response.length; i++) {
+                resyncSingle(response[i].discordId);
+            }
+            console.log("[WISHLIST] Wishlists synced with Steam.");
+        }).catch(function (error) {
+            console.log("[WISHLIST] Error automatically syncing wishlists in daily Cron job: " + error);
+        })
+	},
+	null,
+	true,
+	'Europe/London'
+);

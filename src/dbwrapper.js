@@ -50,5 +50,14 @@ module.exports = {
                 reject(error);
             })
         })
+    },
+    getAllUsers() {
+        return new Promise((resolve, reject) => {
+            db.getAllUsers().then(function (response) {
+                resolve(response);
+            }).catch(function (error) {
+                reject(error);
+            });
+        });
     }
 }
