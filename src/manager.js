@@ -80,9 +80,9 @@ module.exports = {
     }
 }
 
-function resyncSingle (discordId, steamWishlist = null) {
+function resyncSingle(discordId, steamWishlist = null) {
     if (steamWishlist == null) {
-        return new Promise (function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
             db.getUser(discordId).then(function (response) {
                 if (JSON.stringify(response) == "[]") reject("USER_NOT_FOUND");
                 steam.getUserWishlist(response[0].steamSnippet).then(function (response) {
@@ -112,19 +112,72 @@ module.exports.resyncSingle = resyncSingle;
 
 // Cron Jobs
 let wishlistSync = new CronJob(
-	'0 0 12 * * *',
-	function() {
+    '0 0 12 * * *',
+    function () {
         console.log("[WISHLIST] Starting daily wishlist sync.");
-		db.getAllUsers().then(function (response) {
+        db.getAllUsers().then(function (response) {
             for (let i = 0; i < response.length; i++) {
                 resyncSingle(response[i].discordId);
             }
-            console.log("[WISHLIST] Wishlists synced with Steam.");
+            console.log("[WISHLIST] Command issued for all wishlists to be synced with Steam.");
         }).catch(function (error) {
             console.log("[WISHLIST] Error automatically syncing wishlists in daily Cron job: " + error);
         })
-	},
-	null,
-	true,
-	'Europe/London'
+    },
+    null,
+    true,
+    'Europe/London'
+);
+
+let gamePriceSync = new CronJob(
+    '0 30 * * * *',
+    function () {
+        console.log("[WISHLIST] Starting hourly game price sync.");
+        db.getAllUsers().then(function (response) {
+            let gamesObj = {};
+            for (let i = 0; i < response.length; i++) {
+                let games = response[i].gameList.split("&");
+                for (let j = 0; j < games.length; j++) {
+                    if (gamesObj[games[j]] == undefined) {
+                        gamesObj[games[j]] = [response[i].discordId];
+                    }
+                    else {
+                        gamesObj[games[j]].push(response[i].discordId);
+                    }
+                }
+            }
+            let games = Object.keys(gamesObj);
+            for (let i = 0; i < games.length; i++) {
+                steam.getGameInfo(games[i]).then(function (response) {
+                    db.updateGame(games[i], response.price_overview.final).then(function (oldPrice) {
+                        if (oldPrice == -1) {
+                            console.log(`[WISHLIST][DEBUG] Game ${games[i]} not previously in database.`);
+                        }
+                        else if (oldPrice == response.price_overview.final) {
+                            console.log(`[WISHLIST][DEBUG] Game ${games[i]} price has not changed.`);
+                        }
+                        else if (response.price_overview.final < oldPrice) {
+                            if (response.price_overview.discount_percent > 0) {
+                                console.log(`[WISHLIST][DEBUG] Game ${games[i]} has a discount of ${response.price_overview.discount_percent}%.`);
+                                // DM the users
+                            }
+                        }
+                        else if (response.price_overview.final > oldPrice) {
+                            console.log(`[WISHLIST][DEBUG] Game ${games[i]} has risen in price.`);
+                            // DM the users
+                        }
+                    }).catch(function (error) {
+                        console.log("[WISHLIST] Error updating game price in hourly Cron job: " + error);
+                    });
+                }).catch(function (error) {
+
+                })
+            }
+        }).catch(function (error) {
+            console.log("[WISHLIST] Error automatically syncing game prices in hourly Cron job: " + error);
+        })
+    },
+    null,
+    true,
+    'Europe/London'
 );

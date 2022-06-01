@@ -59,5 +59,14 @@ module.exports = {
                 reject(error);
             });
         });
+    },
+    updateGame(gameId, price) {
+        return new Promise((resolve, reject) => {
+            db.updateGame(gameId, price).then(function (response) {
+                resolve(response);
+            }).catch(function (error) {
+                reject(error);
+            });
+        });
     }
 }
