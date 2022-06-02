@@ -14,6 +14,7 @@ client.login(process.env.TOKEN);
 client.on("ready", () => {
     console.log("Bot online!");
     client.user.setActivity("$help and your wishlists!", { type: "WATCHING" });
+    wishlist.setup(client);
 });
 
 client.on("messageCreate", async (message) => {
@@ -66,7 +67,7 @@ function sendGameInfo(message, id) {
             embed.addFields(
                 {
                     name: `Price: ${response.price_overview.final_formatted}`,
-                    value: response.price_overview.discount_percent > 0 ? `Discount: ${response.price_overview.discount_percent}%` : "Currently no discount."
+                    value: response.price_overview.discount_percent > 0 ? `Discount: **${response.price_overview.discount_percent}%**` : "Currently no discount."
                 },
 
             )

@@ -1,9 +1,14 @@
 const steam = require("./steamlib");
 const db = require("./dbwrapper");
 const CronJob = require('cron').CronJob;
+const { MessageEmbed } = require('discord.js');
+let client;
 
 // Exports
 module.exports = {
+    setup: function(discordClient) {
+        client = discordClient;
+    },
     getSteamGame: function (gameid) {
         return new Promise(function (resolve, reject) {
             let int = parseInt(gameid);
@@ -149,28 +154,54 @@ let gamePriceSync = new CronJob(
             let games = Object.keys(gamesObj);
             for (let i = 0; i < games.length; i++) {
                 steam.getGameInfo(games[i]).then(function (response) {
-                    db.updateGame(games[i], response.price_overview.final).then(function (oldPrice) {
-                        if (oldPrice == -1) {
-                            console.log(`[WISHLIST][DEBUG] Game ${games[i]} not previously in database.`);
-                        }
-                        else if (oldPrice == response.price_overview.final) {
-                            console.log(`[WISHLIST][DEBUG] Game ${games[i]} price has not changed.`);
-                        }
-                        else if (response.price_overview.final < oldPrice) {
-                            if (response.price_overview.discount_percent > 0) {
-                                console.log(`[WISHLIST][DEBUG] Game ${games[i]} has a discount of ${response.price_overview.discount_percent}%.`);
-                                // DM the users
+                    if (response.is_free) {
+                        console.log(`[WISHLIST][DEBUG] Game ${response.name} is free, skipping.`);
+                    }
+                    else if (response.price_overview) {
+                        db.updateGame(games[i], response.price_overview.final).then(function (oldPrice) {
+                            if (oldPrice == -1) {
+                                console.log(`[WISHLIST][DEBUG] Game ${response.name} not previously in database.`);
                             }
-                        }
-                        else if (response.price_overview.final > oldPrice) {
-                            console.log(`[WISHLIST][DEBUG] Game ${games[i]} has risen in price.`);
-                            // DM the users
-                        }
-                    }).catch(function (error) {
-                        console.log("[WISHLIST] Error updating game price in hourly Cron job: " + error);
-                    });
-                }).catch(function (error) {
+                            else if (oldPrice == response.price_overview.final) {
+                                console.log(`[WISHLIST][DEBUG] Game ${response.name} has not changed in price.`);
+                            }
+                            else if (response.price_overview.final < oldPrice) {
+                                if (response.price_overview.discount_percent > 0) {
+                                    console.log(`[WISHLIST][DEBUG] Game ${response.name} has a discount of ${response.price_overview.discount_percent}%.`);
+                                    let embed = new MessageEmbed()
+                                                .setTitle(response.name)
+                                                .setDescription(response.short_description)
+                                                .setImage(response.header_image)
+                                                .setColor("#a83e32")
+                                                .addFields(
+                                                    {
+                                                        name: `Price: ${response.price_overview.final_formatted}`,
+                                                        value: response.price_overview.discount_percent > 0 ? `Discount: **${response.price_overview.discount_percent}%**` : "Currently no discount."
+                                                    },
 
+                                                )
+                                    for (let g = 0; g < gamesObj[games[i]].length; g++) {
+                                            client.users.fetch(gamesObj[games[i]][g]).then(user => { 
+                                                user.send({ content: `**${response.name}** is on sale on Steam!`, embeds: [embed] });
+                                            });
+                                    }
+                                }
+                                else {
+                                    console.log(`[WISHLIST][DEBUG] Game ${response.name} has lowered in price off sale.`);
+                                }
+                            }
+                            else if (response.price_overview.final > oldPrice) {
+                                console.log(`[WISHLIST][DEBUG] Game ${response.name} has risen in price.`);
+                            }
+                        }).catch(function (error) {
+                            console.log("[WISHLIST] Error updating game price in hourly Cron job: " + error);
+                        });
+                    }
+                    else {
+                        console.log(`[WISHLIST][DEBUG] Game ${response.name} has no price overview, skipping.`);
+                    }
+                }).catch(function (error) {
+                    console.log("[WISHLIST] Error updating game price in hourly Cron job: " + error);
                 })
             }
         }).catch(function (error) {
