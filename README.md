@@ -3,7 +3,7 @@ A Discord bot which notifies you when Steam wishlist items go on sale.
 
 ## Using the code
 Using Node.js, you can either run this repo as a standalone bot, or integrate the code into your own bot. 
-Make sure to install all the packages listed in `package.json`.
+Make sure to install all the packages listed in `package.json`. Make sure to include all the `.env` variables shown in `.env.default`.
 
 The core code is everything in the `/src` directory.
 
